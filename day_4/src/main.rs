@@ -28,7 +28,7 @@ fn solve_problem_two(filename: &str) {
             total += 1;
         }
     }
-    println!("Problem 2 solution: {}", total)
+    println!("Problem 1 solution: {}", total)
 }
 
 fn main() {
