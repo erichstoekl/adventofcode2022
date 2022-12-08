@@ -1,17 +1,38 @@
-use std::{env, fs::File, collections::HashMap};
+use std::result;
+use std::{env, fs::File, collections::HashMap, borrow::Borrow};
+use std::str::FromStr;
+use rctree::{Node};
 mod file_reader;
-use std::cell::Cell;
 #[macro_use] extern crate scan_fmt;
+extern crate rctree;
 
-#[derive (Clone, Copy)]
-struct FileNode {
-    is_dir: bool,
-    size: u64,
-    children: HashMap<String, Cell<FileNode>>,
+fn recur_build_vector(root: &Node<(String, bool, u64)>, depth: usize, v: &mut Vec<u64>) -> (u64, Vec<u64>) {
+    let mut total: u64  = 0;
+    let data = root.borrow();
+    let s = String::from_str(&std::iter::repeat(" ").take(depth).collect::<String>()).unwrap();
+
+    if !root.has_children() {
+        return (data.2);
+    }
+    let children = root.children();
+    for child in children {
+        let (t, v) = recur_build_vector(&child, depth + 2, v);
+        total += t;
+    }
+    
+    if total <= 100000 {
+        v.push(total);
+        (total, v.to_vec())
+    } else {
+        (0, v.to_vec())
+    }
 }
 
 fn solve_problem_one(filename: &str) {
-    file_reader::get_file_lines(filename);
+    let root = file_reader::get_file_tree(filename);
+    let mut v = Vec::new();
+    recur_build_vector(&root, 0, &mut v);
+
 }
 
 fn solve_problem_two(filename: &str) {
