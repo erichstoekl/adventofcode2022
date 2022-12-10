@@ -7,6 +7,7 @@ mod file_reader;
 extern crate rctree;
 
 static mut global: u64 = 0;
+static mut smallest: u64 = 70000000;
 
 fn recur_build_vector(root: &Node<(String, bool, u64)>, depth: usize) -> u64 {
     let mut total: u64  = 0;
@@ -38,16 +39,44 @@ fn recur_build_vector(root: &Node<(String, bool, u64)>, depth: usize) -> u64 {
     total
 }
 
-fn solve_problem_one(filename: &str) {
-    let root = file_reader::get_file_tree(filename);
+
+fn solve_problem_one(root: Node<(String, bool, u64)>) {
     recur_build_vector(&root, 0);
     unsafe {
         println!("Final result: {}", global);
     }
 }
 
-fn solve_problem_two(filename: &str) {
+fn find_smallest_needed(root: &Node<(String, bool, u64)>, need: u64) -> u64 {
+    let mut total: u64  = 0;
+    let data = root.borrow();
+    if !root.has_children() {
+        return data.2;
+    }
+    let children = root.children();
+    for child in children {
+        let t = find_smallest_needed(&child, need);
+        total += t;
+    }
+    if total >= need {
+        unsafe {
+            if total < smallest {
+                smallest = total;
+            }
+        }
+    }
+    total
+}
 
+fn solve_problem_two(root: Node<(String, bool, u64)>) {
+    let slash_dir = recur_build_vector(&root, 0);
+    let unused = 70000000 - slash_dir;
+    let need = 30000000 - unused;
+    println!("Need {} space", need);
+    find_smallest_needed(&root, need);
+    unsafe {
+        println!("smallest: {}", smallest);
+    }
 }
 
 fn main() {
@@ -59,9 +88,10 @@ fn main() {
     }
     let filename = &args[1];
     let problem: u32 = args[2].parse().unwrap();
+    let root = file_reader::get_file_tree(filename);
     if problem == 1 {
-        solve_problem_one(filename);
+        solve_problem_one(root);
     } else if problem == 2 {
-        solve_problem_two(filename);
+        solve_problem_two(root);
     }
 }
